@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <style>
+    	.red{color:red;}
+    </style>
+  </head>
+
+  <body> 
+  	<ul>
+  		<li>商品a价格<span id="priceA" class="red"></span></li>
+  		<li><button onclick="add(1)">用户1加价</button></li>
+  		<li><button onclick="add(2)">用户2加价</button></li>
+  	</ul>
+  	<ul class="list">
+  		<li>用户<span class="red"></span>出价了<span class="red" ></span>元</li>
+  	</ul>
+    <div id="output"></div>
+       <script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+    <script>
+    var price;
+    function add(id){
+    	console.log(ws.readyState,price)
+    	if(ws.readyState === 1 && price !== undefined){
+    		price +=10;
+    		var data={
+    		"id": id,
+    		"price": price
+    		}
+    		sendMessage(JSON.stringify(data));
+    	}else{
+    		alert('ws未连接');
+    	}
+    	
+    }
+      ws = new WebSocket("ws://127.0.0.1:3001");
+            // 监听open
+	    ws.onopen = function (e) {
+	        log("Connected");
+	        // sendMessage("giveMePrice");
+	    }
+	    // 监听close
+	    ws.onclose = function (e) {
+	        log("Disconnected: " + e.reason);
+	    }
+	    //监听errors
+	    ws.onerror = function (e) {
+	        log("Error ");
+	    }
+	    // 监听 messages 
+	    ws.onmessage = function (e) {
+	    	//id为0，初始价格。id>0代表用户加价后。
+	        log("Message received: " + e.data);
+	        var data = JSON.parse(e.data);
+	        var dom = "";
+	        for(x in data){
+	        	if(data[x].id > 0){
+		        	dom= dom + "<li>用户<span class='red'>"+data[x].id+"</span>出价了<span class='red' >"+data[x].price+"</span>元</li>";
+		        }
+	        }
+	        var length = data.length-1;
+	        console.log(data[length])
+	        price = data[length].price;
+	        $("#priceA").text(price)
+	         $(".list").html(dom);
+
+	        //收到消息后关闭
+	        // ws.close();
+	    }
+	    function sendMessage(msg) {
+		    ws.send(msg);
+		    log("Message sent");
+	    }
+	    // logging
+	    function log(s) {
+	        var p = document.createElement("p");
+	        p.style.wordWrap = "break-word";
+	        p.textContent = s;
+	        output.appendChild(p);
+	        // Also log information on the javascript console
+	        console.log(s);
+	    }
+    </script>
+  </body>
+</html>
